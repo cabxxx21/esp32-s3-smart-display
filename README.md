@@ -172,7 +172,7 @@ pip install -r requirements.txt
 # 📥 Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/esp32-s3-smart-display.git
+git clone https://github.com/cabxxx21/esp32-s3-smart-display.git
 ```
 
 Enter the project directory:
@@ -292,17 +292,17 @@ While `monitor.py` is running, use the following keyboard shortcuts:
                     │        ESP32-S3          │
                     ├──────────────────────────┤
                     │      serial_task         │
-                    │         Core 0            │
+                    │         Core 0           │
                     ├──────────────────────────┤
-                    │        ui_task            │
-                    │         Core 1            │
+                    │        ui_task           │
+                    │         Core 1           │
                     └────────────┬─────────────┘
                                  │
                                  │ SPI
                                  ▼
                     ┌──────────────────────────┐
                     │      ILI9488 TFT         │
-                    │        480 × 320          │
+                    │        480 × 320         │
                     └──────────────────────────┘
 ```
 
