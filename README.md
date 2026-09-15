@@ -503,10 +503,9 @@ esp32-s3-smart-display/
 │   └── ...
 │
 ├── docs/
-│   ├── page1-spotify.png
-│   ├── page2-system.png
-│   ├── page3-esp32.png
-│   └── page4-logs.png
+│   ├── page1.jpeg
+│   ├── page2.jpeg
+│   ├── page4.jpeg
 │
 ├── README.md
 ├── LICENSE
