@@ -1,70 +1,184 @@
-ESP32-S3 Smart Desk Display (Spotify, System Monitor & Hyprland Logs)
 
-A custom 3.5" secondary monitor connected to a PC via USB. It displays real-time system information, music player status (Spotify), and desktop activity logs (Hyprland) using an ESP32-S3 and an ILI9488 LCD. Built entirely with ESP-IDF (C++) and Python on the host side.
-✨ Features
+# ESP32-S3 Smart Desk Display
 
-    Spotify Monitor (Page 1): Displays album art, song title, progress bar, and time-synced lyrics.
-    System Monitor (Page 2): Displays real-time CPU, RAM, and Disk usage, complete with CPU and GPU temperatures (with color-coded warnings).
-    ESP32 Status (Page 3): Monitors internal ESP32 free RAM and FreeRTOS task distribution between Core 0 and Core 1.
-    System & Hyprland Log (Page 4): Displays filtered journalctl logs (free from network/VPN spam) combined with real-time Hyprland events (opening/closing apps, switching workspaces), along with Local & Public IP info.
+**Spotify • System Monitor • Hyprland Logs**
 
-🛠️ Hardware Requirements
+A custom **3.5-inch USB secondary display** powered by an **ESP32-S3** and **ILI9488 TFT**. The display acts as a real-time desktop companion, showing Spotify playback, Linux system statistics, ESP32 diagnostics, and Hyprland activity.
 
-    Microcontroller: ESP32-S3 (DevKitC or similar with at least 8MB Octal PSRAM).
-    Display: 3.5" ILI9488 LCD (Non-Touch, 480x320, SPI).
-    Cables: Dupont jumper wires (male-female).
+> Built with **ESP-IDF (C++)** on the microcontroller and **Python** on the host PC.
 
-📌 Wiring Diagram (ESP32-S3 ↔ ILI9488)
+---
 
-Keep SPI cables as short as possible to ensure a stable 40MHz signal.
-Pin LCD ILI9488	Pin ESP32-S3	Description
-VCC / LED	3.3V / 5V	Power / Backlight
-GND	GND	Ground
-CS	GPIO 10	Chip Select
-DC / RS	GPIO 9	Data/Command
-RST / RES	GPIO 14	Reset
-SDI / MOSI	GPIO 11	SPI Master Out
-SCK / CLK	GPIO 12	SPI Clock
-SDO / MISO	GPIO 13	SPI Master In
-💻 Software Setup (Host PC)
+## ✨ Features
 
-Designed to be Plug & Play on Linux systems (Tested on Arch Linux + Hyprland).
-1. Install PC Dependencies
+### 🎵 Page 1 · Spotify Monitor
+- Album artwork
+- Song title & artist
+- Playback progress bar
+- Time-synchronized lyrics (LRCLIB)
 
-Ensure you have the following packages installed on your Linux system:
+### 📊 Page 2 · System Monitor
+- CPU usage
+- RAM usage
+- Disk usage
+- CPU & GPU temperatures
+- Color-coded temperature warnings
 
-    python3, python-pip, git
-    playerctl (for music control)
-    psutil (for system monitoring)
+### ⚙️ Page 3 · ESP32 Status
+- Free heap memory
+- PSRAM usage
+- FreeRTOS task monitoring
+- Core 0 vs Core 1 workload
 
-2. Clone Repo & Setup Python Environment
+### 🖥️ Page 4 · System & Hyprland Log
+- Filtered `journalctl` logs
+- Real-time Hyprland events
+- Workspace switching
+- Application open/close events
+- Local & Public IP information
 
-git clone https://github.com/YOUR_USERNAME/esp32-s3-smart-display.gitcd esp32-s3-smart-displaypython3 -m venv venvsource venv/bin/activatepip install -r requirements.txt
+---
 
-🚀 Usage
-Step 1: Flash ESP32 Firmware
+## 🛠 Hardware Requirements
 
-    Open this project folder in VSCode (ensure the ESP-IDF extension is installed).
-    Set the target board to esp32s3.
-    Click the Build (🔧) icon, then Flash and Monitor (🔥).
+| Component | Specification |
+|---|---|
+| MCU | ESP32-S3 DevKit (8MB PSRAM recommended) |
+| Display | 3.5" ILI9488 TFT (480×320, SPI, Non-Touch) |
+| Connection | USB + Dupont jumper wires |
 
-Step 2: Run the Host Script
+---
 
-Once the ESP32 is powered on and connected via USB, run the Python script on your PC:
+## 📌 Wiring (ESP32-S3 ↔ ILI9488)
 
+> Keep SPI wires as short as possible for stable **40 MHz** communication.
+
+| ILI9488 | ESP32-S3 |
+|---|---|
+| VCC / LED | 3.3V / 5V |
+| GND | GND |
+| CS | GPIO10 |
+| DC | GPIO9 |
+| RST | GPIO14 |
+| MOSI | GPIO11 |
+| SCK | GPIO12 |
+| MISO | GPIO13 |
+
+---
+
+## 💻 Host PC Setup
+
+**Tested on:** Arch Linux + Hyprland
+
+### 1. Install dependencies
+
+```bash
+sudo pacman -S python python-pip git playerctl
+pip install psutil
+```
+
+Or install everything through `requirements.txt`.
+
+### 2. Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/esp32-s3-smart-display.git
+
+cd esp32-s3-smart-display
+
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 Getting Started
+
+### Flash the ESP32
+
+1. Open the project in **VS Code**
+2. Install the **ESP-IDF Extension**
+3. Select target: `esp32s3`
+4. **Build → Flash → Monitor**
+
+### Run the host application
+
+```bash
 python monitor.py
+```
 
-Step 3: Navigation
+The ESP32 communicates with the PC over **USB CDC Serial**.
 
-While the script is running, press keys on your PC keyboard to switch pages on the LCD:
+---
 
-     Press 1 : Spotify Monitor
-     Press 2 : System Monitor
-     Press 3 : ESP32 Status
-     Press 4 : System & Hyprland Log
-     Press q : Quit the script
+## ⌨️ Controls
 
-⚙️ Technical Details
+| Key | Function |
+|---|---|
+| **1** | Spotify Monitor |
+| **2** | System Monitor |
+| **3** | ESP32 Status |
+| **4** | System & Hyprland Log |
+| **Q** | Quit |
 
-     C++ (ESP-IDF v6): Uses the LovyanGFX library for UI rendering with Double Buffering (Sprite in PSRAM) to ensure a 100% flicker-free experience. Processes are split into two FreeRTOS tasks: serial_task on Core 0 (reading USB CDC) and ui_task on Core 1 (rendering UI).
-     Python: Gathers data via psutil and subprocess (playerctl), fetches synced lyrics from lrclib.net API, and reads Hyprland socket events (socket2.sock) in real-time. Data is sent to the ESP32 via USB Serial using prefixed text protocols (MUS:, SYS:, LOG:, etc.). Album art is resized in Python and sent to the ESP32 in 1024-byte chunks.
+---
+
+## ⚙️ Architecture
+
+### ESP32 (ESP-IDF v6)
+
+- **Language:** C++
+- **Graphics:** LovyanGFX
+- Double buffering using PSRAM sprites
+- 100% flicker-free rendering
+- Dual-core FreeRTOS architecture
+
+| Task | Core | Purpose |
+|---|---|---|
+| `serial_task` | Core 0 | Receive & parse USB data |
+| `ui_task` | Core 1 | Render LCD interface |
+
+### Host PC (Python)
+
+Responsible for collecting desktop information and sending it to the ESP32.
+
+**Data sources**
+
+- `psutil` → CPU, RAM, Disk
+- `playerctl` → Spotify metadata
+- `lrclib.net` → Synced lyrics
+- `Hyprland socket2.sock` → Window events
+- `journalctl` → System logs
+
+**Serial protocol**
+
+```text
+MUS:  Spotify metadata
+SYS:  System statistics
+LOG:  Journal & Hyprland logs
+LYR:  Synced lyrics
+IMG:  Album artwork
+```
+
+Album artwork is resized on the PC and transmitted in **1024-byte** serial chunks.
+
+---
+
+## 📷 Preview
+
+Add screenshots here.
+
+```text
+/docs/page1_spotify.png
+/docs/page2_system.png
+/docs/page3_status.png
+/docs/page4_logs.png
+```
+
+---
+
+## 📄 License
+
+MIT License
