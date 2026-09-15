@@ -1,0 +1,4 @@
+pyserial
+psutil
+requests
+pillow
