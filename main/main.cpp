@@ -342,18 +342,83 @@ void ui_task(void *pvParameters) {
 
       // PAGE 2: ESP32 INTERNAL STATUS
       else if (currentPage == 2) {
-        sprite.setTextColor(col_phosphor);
-        sprite.setTextDatum(TL_DATUM);
-        sprite.drawString("[ ESP32-S3_STATUS ]", 10, 8, &fonts::Font2);
-        for(int i=0; i<480; i+=6) sprite.drawFastHLine(i, 30, 3, col_phosphor);
+        uint32_t col_bg     = tft.color888(30, 30, 46);
+        uint32_t col_card   = tft.color888(49, 50, 68);
+        uint32_t col_icon   = tft.color888(69, 71, 90);
+        uint32_t col_white  = tft.color888(205, 214, 244);
+        uint32_t col_grey   = tft.color888(166, 173, 200);
+        uint32_t col_blue   = tft.color888(137, 180, 250);
+        uint32_t col_yellow = tft.color888(249, 226, 175);
+        uint32_t col_green  = tft.color888(166, 227, 161);
+        uint32_t col_teal   = tft.color888(148, 226, 213);
         
-        uint32_t free_heap = esp_get_free_heap_size() / 1024;
-        sprite.setTextColor(col_dark_grn);
-        char ram_str[32];
-        sprintf(ram_str, "> Free RAM: %lu KB", free_heap);
-        sprite.drawString(ram_str, 15, 50, &fonts::Font4);
-        sprite.drawString("> Core 0: Serial/USB", 15, 90, &fonts::Font4);
-        sprite.drawString("> Core 1: UI/Buttons", 15, 130, &fonts::Font4);
+        sprite.fillSprite(col_bg);
+        
+        sprite.setTextColor(col_blue);
+        sprite.setTextDatum(TL_DATUM);
+        sprite.drawString("[ ESP32-S3_STATUS ]", 15, 10, &fonts::Font2);
+        sprite.drawFastHLine(0, 35, 480, col_card);
+        
+        uint32_t free_internal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024;
+        uint32_t free_psram    = heap_caps_get_free_size(MALLOC_CAP_SPIRAM) / 1024;
+        UBaseType_t stack_core0 = uxTaskGetStackHighWaterMark(xTaskGetIdleTaskHandleForCore(0));
+        UBaseType_t stack_core1 = uxTaskGetStackHighWaterMark(xTaskGetIdleTaskHandleForCore(1));
+
+        // CARD 1: Internal RAM
+        sprite.fillRoundRect(15, 45, 450, 60, 8, col_card);
+        sprite.fillCircle(45, 75, 18, col_icon);
+        sprite.setTextColor(col_white);
+        sprite.setTextDatum(TC_DATUM);
+        sprite.drawString("RAM", 45, 68, &fonts::Font2);
+        sprite.setTextDatum(TL_DATUM);
+        sprite.setTextColor(col_grey);
+        sprite.drawString("Internal Memory", 80, 50, &fonts::Font2);
+        sprite.setTextColor(col_green);
+        char int_ram_str[32]; 
+        sprintf(int_ram_str, "%lu KB free", free_internal);
+        sprite.drawString(int_ram_str, 80, 68, &fonts::Font4);
+        
+        // CARD 2: PSRAM
+        sprite.fillRoundRect(15, 115, 450, 60, 8, col_card);
+        sprite.fillCircle(45, 145, 18, col_icon);
+        sprite.setTextColor(col_white);
+        sprite.setTextDatum(TC_DATUM);
+        sprite.drawString("PSRAM", 45, 138, &fonts::Font2);
+        sprite.setTextDatum(TL_DATUM);
+        sprite.setTextColor(col_grey);
+        sprite.drawString("External Memory", 80, 120, &fonts::Font2);
+        sprite.setTextColor(col_teal);
+        char psram_str[32]; 
+        sprintf(psram_str, "%lu KB free", free_psram);
+        sprite.drawString(psram_str, 80, 138, &fonts::Font4);
+        
+        // CARD 3: Core 0
+        sprite.fillRoundRect(15, 185, 450, 60, 8, col_card);
+        sprite.fillCircle(45, 215, 18, col_icon);
+        sprite.setTextColor(col_white);
+        sprite.setTextDatum(TC_DATUM);
+        sprite.drawString("C0", 45, 208, &fonts::Font2);
+        sprite.setTextDatum(TL_DATUM);
+        sprite.setTextColor(col_grey);
+        sprite.drawString("serial_task", 80, 190, &fonts::Font2);
+        sprite.setTextColor(col_blue);
+        char core0_str[32]; 
+        sprintf(core0_str, "%lu words stack", (unsigned long)stack_core0);
+        sprite.drawString(core0_str, 80, 208, &fonts::Font4);
+        
+        // CARD 4: Core 1
+        sprite.fillRoundRect(15, 255, 450, 55, 8, col_card);
+        sprite.fillCircle(45, 282, 18, col_icon);
+        sprite.setTextColor(col_white);
+        sprite.setTextDatum(TC_DATUM);
+        sprite.drawString("C1", 45, 275, &fonts::Font2);
+        sprite.setTextDatum(TL_DATUM);
+        sprite.setTextColor(col_grey);
+        sprite.drawString("ui_task", 80, 260, &fonts::Font2);
+        sprite.setTextColor(col_yellow);
+        char core1_str[32]; 
+        sprintf(core1_str, "%lu words stack", (unsigned long)stack_core1);
+        sprite.drawString(core1_str, 80, 278, &fonts::Font4);
       }
 
       // PAGE 3: SYSTEM LOG STREAM
@@ -399,7 +464,6 @@ void ui_task(void *pvParameters) {
           }
         }
       }
-      
       sprite.pushSprite(0, 0);
     }
     vTaskDelay(50 / portTICK_PERIOD_MS);
