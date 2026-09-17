@@ -10,20 +10,20 @@ The project is built using **ESP-IDF (C++)** for the ESP32 firmware and **Python
 
 ---
 
-## ✨ Features
+## Features
 
 ### 🎵 Page 1 · Spotify Monitor
 
 Displays real-time music information from Spotify:
 
-- Album artwork
-- Song title
-- Artist name
-- Playback progress
-- Current playback time
-- Total track duration
-- Time-synchronized lyrics
-- Automatic album artwork transfer to the ESP32
+* Album artwork
+* Song title
+* Artist name
+* Playback progress
+* Current playback time
+* Total track duration
+* Time-synchronized lyrics
+* Automatic album artwork transfer to the ESP32
 
 Lyrics are retrieved from the **LRCLIB API** and synchronized with the current playback position.
 
@@ -33,12 +33,12 @@ Lyrics are retrieved from the **LRCLIB API** and synchronized with the current p
 
 Displays real-time system information from the Linux host:
 
-- CPU usage
-- RAM usage
-- Disk usage
-- CPU temperature
-- GPU temperature
-- Color-coded temperature warnings
+* CPU usage
+* RAM usage
+* Disk usage
+* CPU temperature
+* GPU temperature
+* Color-coded temperature warnings
 
 System information is collected using Python and `psutil`.
 
@@ -48,12 +48,12 @@ System information is collected using Python and `psutil`.
 
 Displays internal ESP32 system information:
 
-- Free heap memory
-- PSRAM usage
-- FreeRTOS task information
-- Core 0 activity
-- Core 1 activity
-- Task distribution between CPU cores
+* Free heap memory
+* PSRAM usage
+* FreeRTOS task information
+* Core 0 activity
+* Core 1 activity
+* Task distribution between CPU cores
 
 The ESP32 uses its dual-core architecture to separate communication and UI rendering.
 
@@ -65,73 +65,72 @@ Displays useful desktop and system activity in real time.
 
 Includes:
 
-- Filtered `journalctl` logs
-- Hyprland window events
-- Application open/close events
-- Workspace switching
-- Desktop activity
-- Local IP address
-- Public IP address
+* Filtered `journalctl` logs
+* Hyprland window events
+* Application open/close events
+* Workspace switching
+* Desktop activity
+* Local IP address
+* Public IP address
 
 Network and VPN-related spam can be filtered to keep the log display readable.
 
 ---
 
-# 🛠️ Hardware Requirements
+# Hardware Requirements
 
-| Component | Specification |
-|---|---|
-| Microcontroller | ESP32-S3 DevKit |
-| PSRAM | At least 8 MB Octal PSRAM recommended |
-| Display | 3.5" ILI9488 TFT LCD |
-| Resolution | 480 × 320 |
-| Interface | SPI |
-| Touch | Non-Touch |
-| Connection | USB |
-| Wiring | Dupont jumper wires |
+| Component       | Specification                         |
+| --------------- | ------------------------------------- |
+| Microcontroller | ESP32-S3 DevKit                       |
+| PSRAM           | At least 8 MB Octal PSRAM recommended |
+| Display         | 3.5" ILI9488 TFT LCD                  |
+| Resolution      | 480 × 320                             |
+| Interface       | SPI                                   |
+| Touch           | Non-Touch                             |
+| Connection      | USB                                   |
+| Wiring          | Dupont jumper wires                   |
 
 ---
 
-# 📌 Wiring
+# Wiring
 
 ## ESP32-S3 ↔ ILI9488
 
 Keep SPI wires as short as possible to maintain a stable **40 MHz SPI signal**.
 
-| ILI9488 Pin | ESP32-S3 GPIO | Description |
-|---|---:|---|
-| VCC | 3.3V | LCD power |
-| LED | 3.3V / 5V | Backlight* |
-| GND | GND | Ground |
-| CS | GPIO 10 | Chip Select |
-| DC / RS | GPIO 9 | Data / Command |
-| RST / RES | GPIO 14 | Reset |
-| SDI / MOSI | GPIO 11 | SPI Master Out |
-| SCK / CLK | GPIO 12 | SPI Clock |
-| SDO / MISO | GPIO 13 | SPI Master In |
+| ILI9488 Pin | ESP32-S3 GPIO | Description    |
+| ----------- | ------------: | -------------- |
+| VCC         |          3.3V | LCD power      |
+| LED         |     3.3V / 5V | Backlight*     |
+| GND         |           GND | Ground         |
+| CS          |       GPIO 10 | Chip Select    |
+| DC / RS     |        GPIO 9 | Data / Command |
+| RST / RES   |       GPIO 14 | Reset          |
+| SDI / MOSI  |       GPIO 11 | SPI Master Out |
+| SCK / CLK   |       GPIO 12 | SPI Clock      |
+| SDO / MISO  |       GPIO 13 | SPI Master In  |
 
 > **Note:** Backlight voltage depends on the specific ILI9488 module. Check your display board before connecting `LED` directly to 5V.
 
 ---
 
-# 💻 Software Requirements
+# Software Requirements
 
 ## ESP32
 
-- ESP-IDF v6
-- C++
-- LovyanGFX
-- FreeRTOS
+* ESP-IDF v6
+* C++
+* LovyanGFX
+* FreeRTOS
 
 ## Host PC
 
-- Linux
-- Python 3
-- `playerctl`
-- `psutil`
-- `git`
-- Hyprland
-- `journalctl`
+* Linux
+* Python 3
+* `playerctl`
+* `git`
+* Hyprland
+* `journalctl`
 
 The host application is currently designed and tested on:
 
@@ -139,37 +138,11 @@ The host application is currently designed and tested on:
 
 ---
 
-# 📦 Installation
+# Installation
 
-## 1. Install Host Dependencies
+## 1. Clone the Repository
 
-On Arch Linux:
-
-```bash
-sudo pacman -S python python-pip git playerctl
-```
-
-Create a Python virtual environment:
-
-```bash
-python -m venv venv
-```
-
-Activate it:
-
-```bash
-source venv/bin/activate
-```
-
-Install Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# 📥 Clone the Repository
+Clone the repository to any directory you prefer:
 
 ```bash
 git clone https://github.com/cabxxx21/esp32-s3-smart-display.git
@@ -181,17 +154,58 @@ Enter the project directory:
 cd esp32-s3-smart-display
 ```
 
-Set up the Python environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+The project does not require a specific installation directory. The installer automatically detects the location of the repository.
 
 ---
 
-# 🚀 Usage
+## 2. Run the Installer
+
+Make the installer executable if necessary:
+
+```bash
+chmod +x install.sh
+```
+
+Run:
+
+```bash
+./install.sh
+```
+
+The installer will:
+
+* Check the required project files
+* Install required system packages
+* Create a Python virtual environment
+* Install Python dependencies from `requirements.txt`
+* Create a desktop application entry
+* Configure the host application to run directly from the project directory
+
+The Python virtual environment is created inside the project directory:
+
+```text
+venv/
+```
+
+The `venv/` directory is ignored by Git and is not included in the repository.
+
+---
+
+## 3. Launch the Host Application
+
+After installation, **ESP32 Smart Display** will be available from the desktop application launcher.
+
+The application can also be started manually using:
+
+```bash
+./venv/bin/python monitor.py
+```
+
+The desktop launcher uses the same `monitor.py` file from the repository, so updates pulled from Git are automatically used by the launcher.
+
+---
+
+# Usage
 
 ## Step 1 · Flash the ESP32 Firmware
 
@@ -231,41 +245,41 @@ The ESP32 communicates with the host application through **USB CDC Serial**.
 
 Make sure the device is detected by Linux before starting the host application.
 
+The host application automatically searches for the ESP32 serial device and attempts to reconnect if the device is unavailable.
+
 ---
 
 ## Step 3 · Run the Host Application
 
-Activate the Python environment:
+Launch **ESP32 Smart Display** from the application launcher.
+
+Alternatively:
 
 ```bash
-source venv/bin/activate
-```
-
-Run:
-
-```bash
-python monitor.py
+./venv/bin/python monitor.py
 ```
 
 The host application will begin collecting system, Spotify, and Hyprland information and send it to the ESP32.
 
+If the ESP32 is not connected, the host application will continue retrying the serial connection instead of immediately exiting.
+
 ---
 
-# ⌨️ Navigation
+# Navigation
 
 While `monitor.py` is running, use the following keyboard shortcuts:
 
-| Key | Function |
-|---|---|
-| `1` | Spotify Monitor |
-| `2` | System Monitor |
-| `3` | ESP32 Status |
+| Key | Function               |
+| --- | ---------------------- |
+| `1` | Spotify Monitor        |
+| `2` | System Monitor         |
+| `3` | ESP32 Status           |
 | `4` | System & Hyprland Logs |
-| `q` | Quit |
+| `q` | Quit                   |
 
 ---
 
-# 🏗️ System Architecture
+# System Architecture
 
 ```text
                     ┌──────────────────────────┐
@@ -291,11 +305,11 @@ While `monitor.py` is running, use the following keyboard shortcuts:
                     ┌──────────────────────────┐
                     │        ESP32-S3          │
                     ├──────────────────────────┤
-                    │      serial_task         │
+                    │       serial_task        │
                     │         Core 0           │
                     ├──────────────────────────┤
-                    │        ui_task           │
-                    │         Core 1           │
+                    │         ui_task          │
+                    │          Core 1          │
                     └────────────┬─────────────┘
                                  │
                                  │ SPI
@@ -308,7 +322,7 @@ While `monitor.py` is running, use the following keyboard shortcuts:
 
 ---
 
-# ⚙️ Firmware Architecture
+# Firmware Architecture
 
 The ESP32 firmware uses the ESP32-S3's dual-core architecture to separate communication processing from UI rendering.
 
@@ -316,27 +330,27 @@ The ESP32 firmware uses the ESP32-S3's dual-core architecture to separate commun
 
 Responsible for:
 
-- Receiving USB serial data
-- Parsing incoming packets
-- Processing commands
-- Receiving album artwork
-- Updating shared application data
+* Receiving USB serial data
+* Parsing incoming packets
+* Processing commands
+* Receiving album artwork
+* Updating shared application data
 
 ### Core 1 · `ui_task`
 
 Responsible for:
 
-- Rendering the LCD interface
-- Updating page contents
-- Drawing progress bars
-- Rendering text and images
-- Updating the display at a consistent refresh rate
+* Rendering the LCD interface
+* Updating page contents
+* Drawing progress bars
+* Rendering text and images
+* Updating the display at a consistent refresh rate
 
 This separation helps prevent incoming serial data from blocking UI rendering.
 
 ---
 
-# 🎨 Display Rendering
+# Display Rendering
 
 The UI uses **LovyanGFX** for graphics rendering.
 
@@ -361,7 +375,7 @@ This provides smoother UI updates compared to directly drawing every element ont
 
 ---
 
-# 🐍 Host Application
+# Host Application
 
 The Python application acts as the bridge between the Linux desktop and the ESP32.
 
@@ -375,10 +389,10 @@ psutil
 
 to collect:
 
-- CPU usage
-- Memory usage
-- Disk usage
-- Temperature information
+* CPU usage
+* Memory usage
+* Disk usage
+* Temperature information
 
 ---
 
@@ -392,12 +406,12 @@ playerctl
 
 to retrieve:
 
-- Track title
-- Artist
-- Playback status
-- Current position
-- Track duration
-- Album information
+* Track title
+* Artist
+* Playback status
+* Current position
+* Track duration
+* Album information
 
 ---
 
@@ -444,7 +458,7 @@ Relevant log entries are filtered before being sent to the display to avoid floo
 
 ---
 
-# 📡 Serial Communication
+# Serial Communication
 
 The host PC and ESP32 communicate using a lightweight text-based protocol.
 
@@ -462,13 +476,13 @@ IMG:
 
 ### Protocol Overview
 
-| Prefix | Purpose |
-|---|---|
+| Prefix | Purpose                     |
+| ------ | --------------------------- |
 | `MUS:` | Spotify / music information |
-| `SYS:` | System statistics |
-| `LOG:` | System & Hyprland logs |
-| `LYR:` | Synchronized lyrics |
-| `IMG:` | Album artwork |
+| `SYS:` | System statistics           |
+| `LOG:` | System & Hyprland logs      |
+| `LYR:` | Synchronized lyrics         |
+| `IMG:` | Album artwork               |
 
 Album artwork is resized by the Python application before being transferred to the ESP32.
 
@@ -476,7 +490,7 @@ Image data is transmitted in **1024-byte chunks** to reduce memory and communica
 
 ---
 
-# 🧠 Memory & Performance
+# Memory & Performance
 
 The ESP32-S3 uses both internal RAM and PSRAM.
 
@@ -486,7 +500,7 @@ The firmware also monitors its own memory usage and FreeRTOS task distribution, 
 
 ---
 
-# 📂 Project Structure
+# Project Structure
 
 ```text
 esp32-s3-smart-display/
@@ -497,42 +511,34 @@ esp32-s3-smart-display/
 │   ├── CMakeLists.txt
 │   └── sdkconfig
 │
-├── host/
-│   ├── monitor.py
-│   ├── requirements.txt
-│   └── ...
-│
 ├── docs/
 │   ├── screen1.jpeg
 │   ├── screen2.jpeg
-│   └── screen3.jpeg
+│   └── screen3.jpg
 │
+├── monitor.py
+├── requirements.txt
+├── install.sh
 ├── README.md
 ├── LICENSE
-└── requirements.txt
+└── venv/                 # Local only, ignored by Git
 ```
 
 > The exact project structure may change as development continues.
 
 ---
 
-# 📷  A realtime world camera capture XD
+# 📷 A Realtime World Camera Capture XD
 
 ### Page 1 · Spotify Monitor
 
-![Spotify Monitor](docs/screen1.jpeg)
-
 ### Page 2 · System Monitor
-
-![System Monitor](docs/screen2.jpeg)
 
 ### Page 3 · System & Hyprland Logs
 
-![System & Hyprland Logs](docs/screen3.jpg)
-
 ---
 
-# 🔧 Development
+# Development
 
 This project is primarily developed for **Linux + Hyprland**, but the architecture may be adapted to other desktop environments.
 
@@ -558,18 +564,21 @@ LRCLIB API
 
 ---
 
-# 📝 Notes
+# Notes
 
-- The project currently targets **Linux systems using Hyprland**.
-- Some system-monitoring features may require adaptation for other Linux distributions or desktop environments.
-- GPU temperature monitoring depends on the available hardware and Linux sensor interfaces.
-- Spotify monitoring requires a compatible `playerctl` player interface.
-- Hyprland-specific functionality will not work on non-Hyprland desktop environments without modification.
-- The ILI9488 SPI connection should use short wires for reliable high-speed communication.
+* The project currently targets **Linux systems using Hyprland**.
+* Some system-monitoring features may require adaptation for other Linux distributions or desktop environments.
+* GPU temperature monitoring depends on the available hardware and Linux sensor interfaces.
+* Spotify monitoring requires a compatible `playerctl` player interface.
+* Hyprland-specific functionality will not work on non-Hyprland desktop environments without modification.
+* The ILI9488 SPI connection should use short wires for reliable high-speed communication.
+* The host application can run without the ESP32 connected and will automatically retry the serial connection.
+* The Python virtual environment is created locally by `install.sh` and is not committed to the repository.
+* The desktop launcher points directly to the repository's `monitor.py`.
 
 ---
 
-# 📜 License
+# License
 
 This project is licensed under the **MIT License**.
 
@@ -577,7 +586,7 @@ See the [`LICENSE`](LICENSE) file for details.
 
 ---
 
-# 👤 Author
+# Author
 
 **Rafi**
 
