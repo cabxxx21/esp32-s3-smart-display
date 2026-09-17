@@ -10,8 +10,8 @@
 volatile int currentPage = 0; // 0: Spotify, 1: System, 2: ESP32, 3: Log
 
 // Circular Buffer only 8 Baris
-char logTypes[8][8];
-char logTexts[8][128];
+char logTypes[10][8];
+char logTexts[10][128];
 int logTail = 0;
 
 char cpuVal[8] = "0";
@@ -116,9 +116,8 @@ void serial_task(void *pvParameters) {
           redrawNeeded = true;
         }
         else if (strncmp(line, "LOG:", 4) == 0) {
-          // Masukkan ke circular buffer (kapasitas 8)
           sscanf(line, "LOG:%[^|]|%[^\n]", logTypes[logTail], logTexts[logTail]);
-          logTail = (logTail + 1) % 8;
+          logTail = (logTail + 1) % 10;
           redrawNeeded = true;
         }
         else if (strncmp(line, "SYS:", 4) == 0) {
@@ -452,52 +451,62 @@ void ui_task(void *pvParameters) {
         sprite.setTextColor(col_white);
         sprite.drawString(pubIP, 235, 40, &fonts::Font2);
         
-        // Hanya clear dan gambar kotak log secara parsial (menghindari flicker)
-        sprite.fillRoundRect(10, 65, 460, 245, 8, col_card);
+        sprite.fillRoundRect(10, 65, 460, 250, 8, col_card);
         
+        sprite.setTextWrap(false);
         sprite.setTextDatum(TL_DATUM);
-        int num_lines = 8;
-        int y_start = 75;
-        int line_height = 30; // Spasi antar baris
+        
+        int num_lines = 10;
+        int y_start = 72;
+        int line_height = 24; 
+        
+        sprite.setTextWrap(false);
+        sprite.setTextDatum(TL_DATUM);
         
         for(int i = 0; i < num_lines; i++) {
-          int logIdx = (logTail - num_lines + i + 8) % 8;
-          if (logIdx >= 0 && logIdx < 8) {
+          int logIdx = (logTail - num_lines + i + 10) % 10;
+          if (logIdx >= 0 && logIdx < 10) {
             char* logText = logTexts[logIdx];
-            uint32_t text_col = col_white; // Default
+            uint32_t text_col = col_white; 
             
-            // Syntax Highlighting berdasarkan Prefix Tag
             if (strstr(logText, "[LAUNCH]") != nullptr) {
               text_col = col_green;
-            } 
-            else if (strstr(logText, "[DESTROY]") != nullptr) {
+            } else if (strstr(logText, "[DESTROY]") != nullptr) {
               text_col = col_red;
-            } 
-            else if (strstr(logText, "[WS]") != nullptr) {
+            } else if (strstr(logText, "[WS]") != nullptr) {
               text_col = col_yellow;
-            } 
-            else if (strstr(logText, "[FOCUS]") != nullptr) {
-              text_col = col_teal; // Cyan/Biru Muda
-            }
-            // Fallback ke warna berdasarkan tipe log lama (opsional, jika ada log system tanpa tag)
-            else if (strcmp(logTypes[logIdx], "err") == 0) {
+            } else if (strstr(logText, "[FOCUS]") != nullptr) {
+              text_col = col_teal;
+            } else if (strcmp(logTypes[logIdx], "err") == 0) {
               text_col = col_red;
-            } 
-            else if (strcmp(logTypes[logIdx], "warn") == 0) {
+            } else if (strcmp(logTypes[logIdx], "warn") == 0) {
               text_col = col_yellow;
-            } 
-            else if (strcmp(logTypes[logIdx], "sys") == 0) {
+            } else if (strcmp(logTypes[logIdx], "sys") == 0) {
               text_col = col_blue;
-            } 
-            else if (strcmp(logTypes[logIdx], "kernel") == 0 || strcmp(logTypes[logIdx], "pacman") == 0) {
+            } else if (strcmp(logTypes[logIdx], "kernel") == 0 || strcmp(logTypes[logIdx], "pacman") == 0) {
               text_col = col_green;
             }
-            else {
-              text_col = col_white;
-            }
+
+            char subText[128];
+            strcpy(subText, logText);
             
+            // Set font ke Font2 biar fungsi textWidth ngukur pakai font yang bener
+            sprite.setFont(&fonts::Font2);
+            
+            // Ukur lebar teks secara presisi (Batas aman kotak kanan adalah 440px)
+            if (sprite.textWidth(subText) > 440) {
+                int len = strlen(subText);
+                // Motong huruf demi huruf sampai muat (dikurangi 24px buat nampung "...")
+                while (len > 0 && sprite.textWidth(subText) > 440 - 24) {
+                    len--;
+                    subText[len] = '\0';
+                }
+                // Tempel titik tiga di belakang
+                strcat(subText, "...");
+            }
             sprite.setTextColor(text_col);
-            sprite.drawString(logText, 20, y_start + (i * line_height), &fonts::Font2);
+            // Gambar teksnya eksplisit pakai Font 2 lagi biar pasti Font 2
+            sprite.drawString(subText, 20, y_start + (i * line_height), &fonts::Font2);
           }
         }
       }

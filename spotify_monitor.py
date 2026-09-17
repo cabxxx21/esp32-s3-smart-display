@@ -167,7 +167,6 @@ def hyprland_event_reader():
                             arr = payload.split(",")
                             app_class = arr[0] if len(arr) > 0 else "unknown"
                             app_title = arr[1] if len(arr) > 1 else "unknown"
-                            app_title = app_title[:20]
                             log_text = f"[FOCUS] {app_class} -> {app_title}"
                             
                         elif event == "openwindow":
