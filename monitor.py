@@ -7,6 +7,8 @@ import re
 import sys
 import os
 import socket
+import tty
+import termios
 import threading
 import psutil
 from serial import Serial
@@ -83,10 +85,10 @@ def get_synced_lyrics(artist, title):
                         mins, secs, text = int(match.group(1)), float(match.group(2)), match.group(3).strip()
                         lines.append({'time': mins * 60 + secs, 'text': text})
                 return lines
-            plain = data.get("plainLyrics", "Lirik tidak ditemukan.").split("\n")
+            plain = data.get("plainLyrics", "Lyrics not found.").split("\n")
             return [{'time': 0, 'text': l} for l in plain]
     except: pass
-    return [{'time': 0, 'text': "Gagal mengambil lirik."}]
+    return [{'time': 0, 'text': "Failed to fetch lyrics."}]
 
 def get_album_art_bytes(url):
     try:
@@ -114,7 +116,7 @@ def journalctl_reader():
         proc = subprocess.Popen(["journalctl", "-f", "-o", "cat", "--no-pager"], stdout=subprocess.PIPE, text=True)
         for line in proc.stdout:
             lower_line = line.lower()
-             blacklist = ["ufw", "networkmanager", "wpa_supplicant", "dhcpcd", "resolved", "warp", "masque", "tunnel", "cloudflared", "connectivity", "newneighbour", "destination:", "route-change", "upload_stats", "dns_proxy", "dns proxy", "networkinfochanged", "handle_update", "handle_command", "actor_", "dns_manager", "dns_recovery", "handle_network_info_changed", "trust anchors", "resolv.conf", "reloading network name resolution", "flushed all caches", "cloudflarewarp", "positive trust", "negative trust", "queries", "periodic stats"]
+            blacklist = ["ufw", "networkmanager", "wpa_supplicant", "dhcpcd", "resolved", "warp", "masque", "tunnel", "cloudflared", "connectivity", "newneighbour", "destination:", "route-change", "upload_stats", "dns_proxy", "dns proxy", "networkinfochanged", "handle_update", "handle_command", "actor_", "dns_manager", "dns_recovery", "handle_network_info_changed", "trust anchors", "resolv.conf", "reloading network name resolution", "flushed all caches", "cloudflarewarp", "positive trust", "negative trust", "queries", "periodic stats"]
             if any(bl in lower_line for bl in blacklist): continue
             
             log_type = "info"
@@ -197,7 +199,6 @@ def hyprland_event_reader():
             time.sleep(2)
 
 def read_key():
-    import tty, termios
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -212,21 +213,21 @@ def keyboard_listener():
     while True:
         c = read_key()
         if c in ['\x03', 'q', 'Q']:
-            print("\n[!] Keluar dari script...")
+            print("\n[!] Exiting script...")
             os._exit(0)
         elif c in ['1', '2', '3', '4']:
             current_page = int(c) - 1
             ser.write(f"PAGE:{current_page}\n".encode())
-            print(f">> Pindah ke Page {current_page}")
+            print(f">> Switched to Page {current_page}")
 
 def main():
     global ser
     port = find_esp32()
     if not port:
-        print("ESP32 tidak ditemukan! Pastikan dicolok via USB.")
+        print("ESP32 not found! Please ensure it is connected via USB.")
         sys.exit(1)
         
-    print(f"ESP32 ditemukan di {port}")
+    print(f"ESP32 found at {port}")
     ser = Serial(port, 115200, timeout=1)
     ser.timeout = 5
 
@@ -237,10 +238,9 @@ def main():
     threading.Thread(target=journalctl_reader, daemon=True).start()
     threading.Thread(target=hyprland_event_reader, daemon=True).start()
     
-    print("System ready! Tekan 1-4 buat ganti halaman. (q buat keluar)")
+    print("press 1-4 to switch pages. (Press 'q' to quit)")
 
     while True:
-        # Spotify data
         try:
             status = subprocess.check_output(["playerctl", "status"], text=True).strip().lower()
             title = subprocess.check_output(["playerctl", "metadata", "title"], text=True).strip()
@@ -282,7 +282,6 @@ def main():
             ser.write(b"PRG:0|0\n")
             for i in range(3): ser.write(f"LYR:{i}|...\n".encode())
         
-        # System Monitor data
         if current_page == 1:
             try:
                 cpu = psutil.cpu_percent(interval=None)
@@ -293,7 +292,6 @@ def main():
                 ser.write(f"SYS:{cpu:.0f}|{ram:.0f}|{disk:.0f}|{cpu_t}|{gpu_t}\n".encode())
             except: pass
 
-        # Network Info data
         if current_page == 3:
             try:
                 local_ip, pub_ip_val = get_network_info()
