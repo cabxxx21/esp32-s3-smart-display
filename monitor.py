@@ -114,7 +114,7 @@ def journalctl_reader():
         proc = subprocess.Popen(["journalctl", "-f", "-o", "cat", "--no-pager"], stdout=subprocess.PIPE, text=True)
         for line in proc.stdout:
             lower_line = line.lower()
-            blacklist = ["ufw", "networkmanager", "wpa_supplicant", "dhcpcd", "resolved", "warp", "masque", "tunnel", "cloudflared", "connectivity", "newneighbour", "destination:", "route-change", "upload_stats", "dns_proxy", "dns proxy", "networkinfochanged", "handle_update", "handle_command", "actor_", "dns_manager", "dns_recovery", "handle_network_info_changed", "trust anchors", "resolv.conf", "reloading network name resolution", "flushed all caches", "cloudflarewarp", "positive trust", "negative trust"]
+             blacklist = ["ufw", "networkmanager", "wpa_supplicant", "dhcpcd", "resolved", "warp", "masque", "tunnel", "cloudflared", "connectivity", "newneighbour", "destination:", "route-change", "upload_stats", "dns_proxy", "dns proxy", "networkinfochanged", "handle_update", "handle_command", "actor_", "dns_manager", "dns_recovery", "handle_network_info_changed", "trust anchors", "resolv.conf", "reloading network name resolution", "flushed all caches", "cloudflarewarp", "positive trust", "negative trust", "queries", "periodic stats"]
             if any(bl in lower_line for bl in blacklist): continue
             
             log_type = "info"
