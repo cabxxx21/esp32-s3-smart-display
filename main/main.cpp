@@ -9,7 +9,7 @@
 // Global State
 volatile int currentPage = 0; // 0: Spotify, 1: System, 2: ESP32, 3: Log
 
-// Circular Buffer only 8 Baris
+// Circular Buffer only 8 lines
 char logTypes[10][8];
 char logTexts[10][128];
 int logTail = 0;
@@ -490,22 +490,17 @@ void ui_task(void *pvParameters) {
             char subText[128];
             strcpy(subText, logText);
             
-            // Set font ke Font2 biar fungsi textWidth ngukur pakai font yang bener
             sprite.setFont(&fonts::Font2);
             
-            // Ukur lebar teks secara presisi (Batas aman kotak kanan adalah 440px)
             if (sprite.textWidth(subText) > 440) {
                 int len = strlen(subText);
-                // Motong huruf demi huruf sampai muat (dikurangi 24px buat nampung "...")
                 while (len > 0 && sprite.textWidth(subText) > 440 - 24) {
                     len--;
                     subText[len] = '\0';
                 }
-                // Tempel titik tiga di belakang
                 strcat(subText, "...");
             }
             sprite.setTextColor(text_col);
-            // Gambar teksnya eksplisit pakai Font 2 lagi biar pasti Font 2
             sprite.drawString(subText, 20, y_start + (i * line_height), &fonts::Font2);
           }
         }
