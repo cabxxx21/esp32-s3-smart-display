@@ -503,9 +503,9 @@ esp32-s3-smart-display/
 │   └── ...
 │
 ├── docs/
-│   ├── page1.jpeg
-│   ├── page2.jpeg
-│   ├── page4.jpeg
+│   ├── screen1.jpeg
+│   ├── screen2.jpeg
+│   └── screen3.jpeg
 │
 ├── README.md
 ├── LICENSE
@@ -516,7 +516,7 @@ esp32-s3-smart-display/
 
 ---
 
-# 📷 Screenshots
+# 📷  A realtime world camera capture XD
 
 ### Page 1 · Spotify Monitor
 
