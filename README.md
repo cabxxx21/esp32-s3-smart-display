@@ -528,7 +528,7 @@ esp32-s3-smart-display/
 
 ### Page 3 · System & Hyprland Logs
 
-![System & Hyprland Logs](docs/screen3.jpeg)
+![System & Hyprland Logs](docs/screen3.jpg)
 
 ---
 
