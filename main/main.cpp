@@ -9,8 +9,9 @@
 // Global State
 volatile int currentPage = 0; // 0: Spotify, 1: System, 2: ESP32, 3: Log
 
-char logTypes[16][8];
-char logTexts[16][128];
+// Circular Buffer only 8 Baris
+char logTypes[8][8];
+char logTexts[8][128];
 int logTail = 0;
 
 char cpuVal[8] = "0";
@@ -80,7 +81,7 @@ void draw_controls(lgfx::LGFX_Sprite& sprite, int x, int y, uint32_t color, bool
     sprite.fillRect(x + 110, y, 3, 20, color);
 }
 
-// Task 1 read serial in core 1
+// Task 1: Read serial in Core 0
 void serial_task(void *pvParameters) {
   char line[256]; 
   int idx = 0; 
@@ -115,8 +116,9 @@ void serial_task(void *pvParameters) {
           redrawNeeded = true;
         }
         else if (strncmp(line, "LOG:", 4) == 0) {
+          // Masukkan ke circular buffer (kapasitas 8)
           sscanf(line, "LOG:%[^|]|%[^\n]", logTypes[logTail], logTexts[logTail]);
-          logTail = (logTail + 1) % 16;
+          logTail = (logTail + 1) % 8;
           redrawNeeded = true;
         }
         else if (strncmp(line, "SYS:", 4) == 0) {
@@ -157,7 +159,7 @@ void serial_task(void *pvParameters) {
   }
 }
 
-// Task 2: Render ui core 1
+// Task 2: Render UI in Core 1
 void ui_task(void *pvParameters) {
   uint32_t col_phosphor = tft.color888(0, 255, 0);
   uint32_t col_dark_grn = tft.color888(0, 170, 0);
@@ -174,10 +176,10 @@ void ui_task(void *pvParameters) {
     if (redrawNeeded) {
       redrawNeeded = false; 
       
-      sprite.fillSprite(col_bg);
-      
       // PAGE 0: SPOTIFY
       if (currentPage == 0) {
+        sprite.fillSprite(col_bg);
+        
         for(int i=0; i<480; i+=6) sprite.drawFastHLine(i, 30, 3, col_phosphor);
         sprite.setTextColor(col_phosphor);
         sprite.setTextDatum(TL_DATUM);
@@ -432,6 +434,7 @@ void ui_task(void *pvParameters) {
         uint32_t col_red    = tft.color888(243, 139, 168);
         uint32_t col_blue   = tft.color888(137, 180, 250);
         uint32_t col_green  = tft.color888(166, 227, 161);
+        uint32_t col_teal   = tft.color888(148, 226, 213);
         
         sprite.fillSprite(col_bg);
         
@@ -449,18 +452,52 @@ void ui_task(void *pvParameters) {
         sprite.setTextColor(col_white);
         sprite.drawString(pubIP, 235, 40, &fonts::Font2);
         
+        // Hanya clear dan gambar kotak log secara parsial (menghindari flicker)
         sprite.fillRoundRect(10, 65, 460, 245, 8, col_card);
         
         sprite.setTextDatum(TL_DATUM);
-        for(int i = 0; i < 13; i++) {
-          int logIdx = (logTail - 13 + i + 16) % 16;
-          if (logIdx >= 0 && logIdx < 16) {
-            if (strcmp(logTypes[logIdx], "err") == 0) sprite.setTextColor(col_red);
-            else if (strcmp(logTypes[logIdx], "warn") == 0) sprite.setTextColor(col_yellow);
-            else if (strcmp(logTypes[logIdx], "sys") == 0) sprite.setTextColor(col_blue);
-            else if (strcmp(logTypes[logIdx], "kernel") == 0 || strcmp(logTypes[logIdx], "pacman") == 0) sprite.setTextColor(col_green);
-            else sprite.setTextColor(col_white);
-            sprite.drawString(logTexts[logIdx], 20, 75 + (i * 18), &fonts::Font2);
+        int num_lines = 8;
+        int y_start = 75;
+        int line_height = 30; // Spasi antar baris
+        
+        for(int i = 0; i < num_lines; i++) {
+          int logIdx = (logTail - num_lines + i + 8) % 8;
+          if (logIdx >= 0 && logIdx < 8) {
+            char* logText = logTexts[logIdx];
+            uint32_t text_col = col_white; // Default
+            
+            // Syntax Highlighting berdasarkan Prefix Tag
+            if (strstr(logText, "[LAUNCH]") != nullptr) {
+              text_col = col_green;
+            } 
+            else if (strstr(logText, "[DESTROY]") != nullptr) {
+              text_col = col_red;
+            } 
+            else if (strstr(logText, "[WS]") != nullptr) {
+              text_col = col_yellow;
+            } 
+            else if (strstr(logText, "[FOCUS]") != nullptr) {
+              text_col = col_teal; // Cyan/Biru Muda
+            }
+            // Fallback ke warna berdasarkan tipe log lama (opsional, jika ada log system tanpa tag)
+            else if (strcmp(logTypes[logIdx], "err") == 0) {
+              text_col = col_red;
+            } 
+            else if (strcmp(logTypes[logIdx], "warn") == 0) {
+              text_col = col_yellow;
+            } 
+            else if (strcmp(logTypes[logIdx], "sys") == 0) {
+              text_col = col_blue;
+            } 
+            else if (strcmp(logTypes[logIdx], "kernel") == 0 || strcmp(logTypes[logIdx], "pacman") == 0) {
+              text_col = col_green;
+            }
+            else {
+              text_col = col_white;
+            }
+            
+            sprite.setTextColor(text_col);
+            sprite.drawString(logText, 20, y_start + (i * line_height), &fonts::Font2);
           }
         }
       }
@@ -470,7 +507,7 @@ void ui_task(void *pvParameters) {
   }
 }
 
-// main entry point
+// Main Entry Point
 extern "C" void app_main(void) {
     tft.init();
     tft.setRotation(1); 

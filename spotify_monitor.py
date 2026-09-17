@@ -134,9 +134,10 @@ def journalctl_reader():
 def hyprland_event_reader():
     xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
     hypr_sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
-    if not hypr_sig: return # Skip kalau bukan Hyprland
+    if not hypr_sig: return
     
     socket_path = f"{xdg_runtime}/hypr/{hypr_sig}/.socket2.sock"
+    
     while True:
         try:
             client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -152,23 +153,49 @@ def hyprland_event_reader():
                         line, buffer = buffer.split("\n", 1)
                         line = line.strip()
                         if not line: continue
+                        
                         parts = line.split(">>")
                         event = parts[0].strip()
                         payload = parts[1].strip() if len(parts) > 1 else ""
+                        
                         log_text = ""
                         
-                        if event == "workspace": log_text = f"Workspace -> {payload}"
-                        elif event == "openwindow": log_text = f"Opened -> {payload.split(',')[2] if len(payload.split(',')) > 2 else 'unknown'}"
-                        elif event == "closewindow": log_text = "Closed -> Window"
-                        elif event == "activewindow": log_text = f"Focus -> {payload.split(',')[1] if len(payload.split(',')) > 1 else 'unknown'}"
+                        if event == "workspace":
+                            log_text = f"[WS] Active Workspace -> {payload}"
+                            
+                        elif event == "activewindow":
+                            arr = payload.split(",")
+                            app_class = arr[0] if len(arr) > 0 else "unknown"
+                            app_title = arr[1] if len(arr) > 1 else "unknown"
+                            app_title = app_title[:20]
+                            log_text = f"[FOCUS] {app_class} -> {app_title}"
+                            
+                        elif event == "openwindow":
+                            arr = payload.split(",")
+                            workspace = arr[1] if len(arr) > 1 else "unknown"
+                            app_class = arr[2] if len(arr) > 2 else "unknown"
+                            log_text = f"[LAUNCH] {app_class} on WS {workspace}"
+                            
+                        elif event == "closewindow":
+                            log_text = "[DESTROY] Window closed"
+                            
+                        elif event == "fullscreen":
+                            if payload == "1":
+                                log_text = "[DISPLAY] Fullscreen -> ON"
+                            else:
+                                log_text = "[DISPLAY] Fullscreen -> OFF"
                         
                         if log_text and current_page == 3:
                             log_text = log_text.replace(":", " ").replace("\n", " ").replace("|", " ")[:80]
                             ser.write(f"LOG:hypr|{log_text}\n".encode())
-                except socket.timeout: continue
-                except: break
+                            
+                except socket.timeout:
+                    continue
+                except Exception:
+                    break
             client.close()
-        except: time.sleep(2)
+        except Exception:
+            time.sleep(2)
 
 def read_key():
     import tty, termios
