@@ -66,7 +66,7 @@ if command -v apt &> /dev/null; then
     if ! groups | grep &> /dev/null "dialout"; then
         echo ""
         echo "=== ACTION REQUIRED: Serial Device Permission ==="
-        echo "Your user is not in the 'dialout' group."
+        echo "Your user is not in the 'dialout' group or 'uucp' group for arch user."
         echo "You might not be able to access the ESP32 serial port (/dev/ttyACM*)."
         echo "Run: sudo usermod -aG dialout \$USER"
         echo "Then, log out and log back in."
