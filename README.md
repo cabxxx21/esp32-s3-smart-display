@@ -532,9 +532,15 @@ esp32-s3-smart-display/
 
 ### Page 1 · Spotify Monitor
 
+![Spotify Monitor](docs/screen1.jpeg)
+
 ### Page 2 · System Monitor
 
+![System Monitor](docs/screen2.jpeg)
+
 ### Page 3 · System & Hyprland Logs
+
+![System & Hyprland Logs](docs/screen3.jpg)
 
 ---
 
