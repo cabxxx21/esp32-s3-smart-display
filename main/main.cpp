@@ -7,9 +7,9 @@
 #include <LovyanGFX.hpp>
 
 // Global State
-volatile int currentPage = 0; // 0: Spotify, 1: System, 2: ESP32, 3: Log
+volatile int currentPage = 0;
+volatile int maxPages = 3;
 
-// Circular Buffer only 8 lines
 char logTypes[10][8];
 char logTexts[10][128];
 int logTail = 0;
@@ -24,7 +24,7 @@ char localIP[32] = "0.0.0.0";
 char pubIP[32] = "0.0.0.0";
 
 char musicTitle[64] = "Waiting...";
-char musicArtist[64] = "Arch Linux";
+char musicArtist[64] = "Larp Linux";
 char musicStatus[16] = "stopped";
 char lyricsLines[3][80] = {"...", "...", "..."};
 long pos_ms = 0;
@@ -68,17 +68,10 @@ class LGFX : public lgfx::LGFX_Device
 
 LGFX tft;
 
-void draw_controls(lgfx::LGFX_Sprite& sprite, int x, int y, uint32_t color, bool is_playing) {
-    sprite.fillRect(x, y, 3, 20, color);
-    sprite.fillTriangle(x + 13, y, x + 13, y + 20, x + 3, y + 10, color);
-    if (is_playing) {
-        sprite.fillRect(x + 50, y, 4, 20, color);
-        sprite.fillRect(x + 60, y, 4, 20, color);
-    } else {
-        sprite.fillTriangle(x + 50, y, x + 50, y + 20, x + 70, y + 10, color);
-    }
-    sprite.fillTriangle(x + 100, y, x + 100, y + 20, x + 110, y + 10, color);
-    sprite.fillRect(x + 110, y, 3, 20, color);
+void draw_xp_button(lgfx::LGFX_Sprite& sprite, int x, int y, int w, int h, uint32_t col_grey, uint32_t col_dark, uint32_t col_border, uint32_t col_text) {
+    sprite.fillRoundRect(x, y, w, h, 3, col_border);
+    sprite.fillRoundRect(x+1, y+1, w-2, h-2, 2, col_dark);
+    sprite.fillRoundRect(x+1, y+1, w-2, h/2, 2, col_grey); // Glossy top
 }
 
 // Task 1: Read serial in Core 0
@@ -111,9 +104,17 @@ void serial_task(void *pvParameters) {
             redrawNeeded = true;
           }
         }         
-        else if (strncmp(line, "PAGE:", 5) == 0) {
-          currentPage = atoi(line + 5);
+        else if (strncmp(line, "MAXPAGES:", 9) == 0) {
+          maxPages = atoi(line + 9);
+          if (currentPage >= maxPages) currentPage = 0;
           redrawNeeded = true;
+        }
+        else if (strncmp(line, "PAGE:", 5) == 0) {
+          int reqPage = atoi(line + 5);
+          if (reqPage >= 0 && reqPage < maxPages) {
+            currentPage = reqPage;
+            redrawNeeded = true;
+          }
         }
         else if (strncmp(line, "LOG:", 4) == 0) {
           sscanf(line, "LOG:%[^|]|%[^\n]", logTypes[logTail], logTexts[logTail]);
@@ -160,13 +161,6 @@ void serial_task(void *pvParameters) {
 
 // Task 2: Render UI in Core 1
 void ui_task(void *pvParameters) {
-  uint32_t col_phosphor = tft.color888(0, 255, 0);
-  uint32_t col_dark_grn = tft.color888(0, 170, 0);
-  uint32_t col_scanline = tft.color888(0, 40, 0);
-  uint32_t col_prog_bg  = tft.color888(20, 20, 20);
-  uint32_t col_bg       = TFT_BLACK;
-  uint32_t col_highlight = TFT_WHITE;
-
   lgfx::LGFX_Sprite sprite(&tft);
   sprite.setPsram(true);
   sprite.createSprite(480, 320);
@@ -175,65 +169,131 @@ void ui_task(void *pvParameters) {
     if (redrawNeeded) {
       redrawNeeded = false; 
       
-      // PAGE 0: SPOTIFY
+      // PAGE 0: SPOTIFY (XP NOIR THEME)
       if (currentPage == 0) {
+        uint32_t col_bg      = tft.color888(43, 43, 43);
+        uint32_t col_white   = tft.color888(255, 255, 255);
+        uint32_t col_grey    = tft.color888(170, 170, 170);
+        uint32_t col_sunken  = tft.color888(58, 58, 58);
+        uint32_t col_border_d= tft.color888(0, 0, 0);
+        uint32_t col_border_l= tft.color888(85, 85, 85);
+        uint32_t col_btn_gr  = tft.color888(119, 119, 119);
+        uint32_t col_btn_dk  = tft.color888(51, 51, 51);
+        uint32_t col_btn_brd = tft.color888(17, 17, 17);
+        uint32_t col_green   = tft.color888(166, 227, 161);
+        
         sprite.fillSprite(col_bg);
         
-        for(int i=0; i<480; i+=6) sprite.drawFastHLine(i, 30, 3, col_phosphor);
-        sprite.setTextColor(col_phosphor);
+        // 1. Title Bar Gradient
+        for(int i=0; i<28; i++) {
+            float t = (float)i / 28.0f;
+            uint8_t r = 74 + (30 - 74) * t;
+            uint8_t g = 74 + (30 - 74) * t;
+            uint8_t b = 106 + (48 - 106) * t;
+            sprite.drawFastHLine(0, i, 480, tft.color888(r, g, b));
+        }
+        
+        // Title Bar Text & Status
+        bool is_playing = (strcmp(musicStatus, "playing") == 0);
+        sprite.setTextColor(col_white);
         sprite.setTextDatum(TL_DATUM);
-        sprite.drawString("[ SPOTIFY_MONITOR ]", 10, 8, &fonts::Font2);
+        sprite.drawString("> Spotify Media Player", 10, 7, &fonts::Font2);
+        sprite.setTextColor(is_playing ? col_green : col_grey);
         sprite.setTextDatum(TR_DATUM);
-        sprite.drawString(musicStatus, 470, 8, &fonts::Font2);
+        sprite.drawString(musicStatus, 460, 7, &fonts::Font2);
 
-        sprite.drawRect(15, 40, 140, 140, col_phosphor);
+        // 2. Left Column (Album Art & Controls)
+        // Album Art Sunken Box (140x140 biar muat 138x138)
+        sprite.fillRect(15, 40, 140, 140, col_sunken);
+        sprite.drawFastHLine(15, 40, 140, col_border_d);
+        sprite.drawFastVLine(15, 40, 140, col_border_d);
+        sprite.drawFastHLine(15, 179, 140, col_border_l);
+        sprite.drawFastVLine(154, 40, 140, col_border_l);
+
         if (imgReady && img_buf != nullptr) {
           sprite.pushImage(16, 41, 138, 138, (uint16_t*)img_buf);
         } else {
-          for(int y=41; y<180; y+=4) sprite.drawFastHLine(16, y, 138, col_scanline);
           sprite.setTextDatum(TC_DATUM);
-          sprite.setTextColor(col_dark_grn);
-          sprite.drawString("NO IMAGE", 85, 95, &fonts::Font2);
-          sprite.drawString("140x140", 85, 115, &fonts::Font2);
+          sprite.setTextColor(col_grey);
+          sprite.drawString("NO IMAGE", 85, 100, &fonts::Font2);
         }
 
+        // XP Controls
+        int btn_y = 185;
+        int btn_w = 40;
+        int btn_h = 26;
+        int gap = 10;
+        int btn_x_start = 15; 
+        
+        // Button 1: Prev
+        int bx = btn_x_start;
+        draw_xp_button(sprite, bx, btn_y, btn_w, btn_h, col_btn_gr, col_btn_dk, col_btn_brd, col_white);
+        sprite.fillRect(bx+12, btn_y+8, 3, 10, col_white);
+        sprite.fillTriangle(bx+25, btn_y+8, bx+25, btn_y+18, bx+15, btn_y+13, col_white);
+
+        // Button 2: Play/Pause
+        bx = btn_x_start + btn_w + gap;
+        draw_xp_button(sprite, bx, btn_y, btn_w, btn_h, col_btn_gr, col_btn_dk, col_btn_brd, col_white);
+        if (is_playing) {
+            sprite.fillRect(bx+14, btn_y+7, 4, 12, col_white);
+            sprite.fillRect(bx+22, btn_y+7, 4, 12, col_white);
+        } else {
+            sprite.fillTriangle(bx+14, btn_y+7, bx+14, btn_y+19, bx+26, btn_y+13, col_white);
+        }
+        
+        // Button 3: Next
+        bx = btn_x_start + (btn_w + gap)*2;
+        draw_xp_button(sprite, bx, btn_y, btn_w, btn_h, col_btn_gr, col_btn_dk, col_btn_brd, col_white);
+        sprite.fillTriangle(bx+12, btn_y+8, bx+12, btn_y+18, bx+21, btn_y+13, col_white);
+        sprite.fillRect(bx+21, btn_y+8, 3, 10, col_white);
+
+        // 3. Right Column (Info & Progress)
         sprite.setTextDatum(TL_DATUM);
-        sprite.setTextColor(col_phosphor);
-        sprite.drawString("> ", 175, 45, &fonts::Font4);
-        sprite.drawString(musicTitle, 195, 45, &fonts::Font4);
-        sprite.setTextColor(col_dark_grn);
-        sprite.drawString("> ", 175, 85, &fonts::Font2);
-        sprite.drawString(musicArtist, 195, 85, &fonts::Font2);
+        sprite.setTextColor(col_white);
+        sprite.drawString(musicTitle, 165, 55, &fonts::Font4); // Title
+        sprite.setTextColor(col_grey);
+        sprite.drawString(musicArtist, 165, 85, &fonts::Font2); // Artist
 
-        sprite.fillRoundRect(175, 115, 290, 8, 4, col_prog_bg);
+        // Progress Bar (XP Blocky Blue)
+        int px = 165, py = 120, pw = 300, ph = 18;
+        sprite.drawRect(px, py, pw, ph, col_border_d);
+        sprite.fillRect(px+1, py+1, pw-2, ph-2, col_sunken);
         if (dur_ms > 0) {
-          int prog_w = (290 * pos_ms) / dur_ms;
-          if (prog_w > 290) prog_w = 290;
-          sprite.fillRoundRect(175, 115, prog_w, 8, 4, col_phosphor);
+            int prog_w = ((pw-4) * pos_ms) / dur_ms;
+            if (prog_w > 0) {
+                for(int i=0; i<ph-4; i++) {
+                    float t = (float)i / (float)(ph-4);
+                    uint8_t r = 0;
+                    uint8_t g = 180 + (80 - 180) * t;
+                    uint8_t b = 255 + (153 - 255) * t;
+                    sprite.drawFastHLine(px+2, py+2+i, prog_w, tft.color888(r, g, b));
+                }
+            }
         }
-
-        char time_str[16];
+        
+        // Time
+        char time_str[32];
         int p_min = (pos_ms / 1000) / 60, p_sec = (pos_ms / 1000) % 60;
         int d_min = (dur_ms / 1000) / 60, d_sec = (dur_ms / 1000) % 60;
-        sprintf(time_str, "%02d:%02d", p_min, p_sec);
-        sprite.setTextColor(col_dark_grn);
-        sprite.drawString(time_str, 175, 128, &fonts::Font2);
-        sprite.setTextDatum(TR_DATUM);
-        sprintf(time_str, "%02d:%02d", d_min, d_sec);
-        sprite.drawString(time_str, 465, 128, &fonts::Font2);
-        sprite.setTextDatum(TL_DATUM);
+        sprintf(time_str, "%02d:%02d / %02d:%02d", p_min, p_sec, d_min, d_sec);
+        sprite.setTextColor(col_grey);
+        sprite.drawString(time_str, 165, 145, &fonts::Font2);
 
-        bool is_playing = (strcmp(musicStatus, "playing") == 0);
-        draw_controls(sprite, 260, 155, col_phosphor, is_playing);
-
-        sprite.drawRect(15, 195, 450, 115, col_phosphor);
+        // 4. Lyrics Box (Sunken)
+        int lx = 15, ly = 225, lw = 450, lh = 80;
+        sprite.fillRect(lx, ly, lw, lh, col_sunken);
+        sprite.drawFastHLine(lx, ly, lw, col_border_d);
+        sprite.drawFastVLine(lx, ly, lh, col_border_d);
+        sprite.drawFastHLine(lx, ly+lh-1, lw, col_border_l);
+        sprite.drawFastVLine(lx+lw-1, ly, lh, col_border_l);
+        
         sprite.setTextDatum(TC_DATUM);
         sprite.setTextWrap(true);
-        sprite.setTextColor(col_highlight, col_bg);
-        sprite.drawString(lyricsLines[0], 240, 210, &fonts::Font2);
-        sprite.setTextColor(col_dark_grn, col_bg);
-        sprite.drawString(lyricsLines[1], 240, 235, &fonts::Font2);
-        sprite.drawString(lyricsLines[2], 240, 260, &fonts::Font2);
+        sprite.setTextColor(col_white, col_sunken);
+        sprite.drawString(lyricsLines[0], 240, 240, &fonts::Font2);
+        sprite.setTextColor(col_grey, col_sunken);
+        sprite.drawString(lyricsLines[1], 240, 260, &fonts::Font2);
+        sprite.drawString(lyricsLines[2], 240, 280, &fonts::Font2);
       } 
 
       // PAGE 1: SYSTEM MONITOR
@@ -460,16 +520,15 @@ void ui_task(void *pvParameters) {
         int y_start = 72;
         int line_height = 24; 
         
-        sprite.setTextWrap(false);
-        sprite.setTextDatum(TL_DATUM);
-        
         for(int i = 0; i < num_lines; i++) {
           int logIdx = (logTail - num_lines + i + 10) % 10;
           if (logIdx >= 0 && logIdx < 10) {
             char* logText = logTexts[logIdx];
             uint32_t text_col = col_white; 
             
-            if (strstr(logText, "[LAUNCH]") != nullptr) {
+            if (strcmp(logTypes[logIdx], "crit") == 0) {
+              text_col = tft.color888(255, 0, 0);
+            } else if (strstr(logText, "[LAUNCH]") != nullptr) {
               text_col = col_green;
             } else if (strstr(logText, "[DESTROY]") != nullptr) {
               text_col = col_red;
@@ -489,7 +548,6 @@ void ui_task(void *pvParameters) {
 
             char subText[128];
             strcpy(subText, logText);
-            
             sprite.setFont(&fonts::Font2);
             
             if (sprite.textWidth(subText) > 440) {
