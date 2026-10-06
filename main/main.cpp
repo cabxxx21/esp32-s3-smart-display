@@ -223,11 +223,7 @@ void ui_task(void *pvParameters) {
         int btn_w = 40;
         int btn_h = 26;
         int gap = 10;
-<<<<<<< HEAD
         int btn_x_start = 15; 
-=======
-        int btn_x_start = 15; // Digeser ke 15 biar lurus sama Album Art di atasnya
->>>>>>> eb3a40c (how u been?)
         
         // Button 1: Prev
         int bx = btn_x_start;
