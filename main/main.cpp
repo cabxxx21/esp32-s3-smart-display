@@ -223,7 +223,7 @@ void ui_task(void *pvParameters) {
         int btn_w = 40;
         int btn_h = 26;
         int gap = 10;
-        int btn_x_start = 15; 
+        int btn_x_start = 15;
         
         // Button 1: Prev
         int bx = btn_x_start;
